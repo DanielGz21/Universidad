@@ -284,7 +284,7 @@ const events = [
     title: "Humanismo Clásico",
     description: "Surge en Grecia y Roma. El hombre es el centro del conocimiento; se desarrollan la democracia, la filosofía y las artes clásicas.",
     persons: "Sócrates, Platón, Aristóteles, Cicerón.",
-    img: "https://raw.githubusercontent.com/DanielGz21/UI_Digital_Dani/main/Humanismo_Clasico.jpg",
+    img: "./Humanismo_Clasico.jpg",
     accent: "#F6E8D9"
   },
   {
@@ -293,7 +293,7 @@ const events = [
     title: "Humanismo Renacentista",
     description: "Renacer de las artes y las ciencias; auge del antropocentrismo, la imprenta y los grandes descubrimientos geográficos.",
     persons: "Leonardo da Vinci, Miguel Ángel, Erasmo de Rotterdam, Maquiavelo.",
-    img: "https://raw.githubusercontent.com/DanielGz21/UI_Digital_Dani/main/Humanismo_Renacentista.jpg",
+    img: "./Humanismo_Renacentista.jpg",
     accent: "#F3E8FF"
   },
   {
@@ -302,7 +302,7 @@ const events = [
     title: "Humanismo Ilustrado",
     description: "Movimiento basado en la razón, la igualdad y la libertad; la Enciclopedia y la Revolución Francesa transforman la política y la sociedad.",
     persons: "Voltaire, Rousseau, Montesquieu, Kant.",
-    img: "https://raw.githubusercontent.com/DanielGz21/UI_Digital_Dani/main/Humanismo_Ilustrado.jpg",
+    img: "./Humanismo_Ilustrado.jpg",
     accent: "#E8F5FF"
   },
   {
@@ -311,7 +311,7 @@ const events = [
     title: "Humanismo Contemporáneo",
     description: "Énfasis en los derechos humanos, justicia social, avances científicos y pluralidad cultural; la Declaración Universal de los Derechos Humanos simboliza este periodo.",
     persons: "Karl Marx, Albert Einstein, Simone de Beauvoir, Martin Luther King.",
-    img: "https://raw.githubusercontent.com/DanielGz21/UI_Digital_Dani/main/Humanismo_Contempor%C3%A1neo.jpg",
+    img: "./Humanismo_Contemporáneo.jpg",
     accent: "#E8FFF4"
   }
 ];
@@ -537,32 +537,36 @@ wordBtn.addEventListener('click', async () => {
   wordBtn.textContent = 'Generando...';
   try {
     const { Document, Packer, Paragraph, TextRun, HeadingLevel } = docx;
-    const doc = new Document({ sections: [] });
+    
+    const sections = [];
 
-    // portada
-    doc.addSection({
-      properties: {},
-      children: [
-        new Paragraph({ text: "Correlacionando los Humanismos", heading: HeadingLevel.TITLE }),
-        new Paragraph({}),
-        new Paragraph({ children: [ new TextRun({ text: "Profesor: ", bold: true }), new TextRun("Yulieth Erisbey Agudelo Carmona")] }),
-        new Paragraph({ children: [ new TextRun({ text: "Materia: ", bold: true }), new TextRun("Cátedra IU Digital: Humanismo y Ciudadanía Digital - PREICA2502B010144")] }),
-        new Paragraph({ children: [ new TextRun({ text: "Estudiante: ", bold: true }), new TextRun("Albert Daniel Gaviria Zapata")] }),
-        new Paragraph({ children: [ new TextRun({ text: "Año: ", bold: true }), new TextRun("2025")] })
-      ]
-    });
-
-    // eventos
-    events.forEach(ev => {
-      doc.addSection({
+    // Portada
+    sections.push({
+        properties: {},
         children: [
-          new Paragraph({ text: ev.title, heading: HeadingLevel.HEADING_1 }),
-          new Paragraph({ children: [ new TextRun({ text: "Fecha: ", bold:true }), new TextRun(ev.date) ] }),
-          new Paragraph(ev.description),
-          new Paragraph({ children: [ new TextRun({ text: "Personajes: ", bold:true }), new TextRun(ev.persons) ] }),
+            new Paragraph({ text: "Correlacionando los Humanismos", heading: HeadingLevel.HEADING_1 }),
+            new Paragraph({}),
+            new Paragraph({ children: [ new TextRun({ text: "Profesor: ", bold: true }), new TextRun("Yulieth Erisbey Agudelo Carmona")] }),
+            new Paragraph({ children: [ new TextRun({ text: "Materia: ", bold: true }), new TextRun("Cátedra IU Digital: Humanismo y Ciudadanía Digital - PREICA2502B010144")] }),
+            new Paragraph({ children: [ new TextRun({ text: "Estudiante: ", bold: true }), new TextRun("Albert Daniel Gaviria Zapata")] }),
+            new Paragraph({ children: [ new TextRun({ text: "Año: ", bold: true }), new TextRun("2025")] })
         ]
-      });
     });
+
+    // Eventos
+    events.forEach(ev => {
+        sections.push({
+            properties: {},
+            children: [
+                new Paragraph({ text: ev.title, heading: HeadingLevel.HEADING_1 }),
+                new Paragraph({ children: [ new TextRun({ text: "Fecha: ", bold:true }), new TextRun(ev.date) ] }),
+                new Paragraph(ev.description),
+                new Paragraph({ children: [ new TextRun({ text: "Personajes: ", bold:true }), new TextRun(ev.persons) ] }),
+            ]
+        });
+    });
+
+    const doc = new Document({ sections: sections });
 
     const blob = await Packer.toBlob(doc);
     const url = URL.createObjectURL(blob);
@@ -579,6 +583,24 @@ wordBtn.addEventListener('click', async () => {
   }
 });
 
+/* ------------- Helper to convert image URL to base64 ------------- */
+async function imageUrlToBase64(url) {
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  return new Promise((resolve, reject) => {
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0);
+      resolve(canvas.toDataURL('image/png'));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 /* ------------- Generate PPTX (pptxgenjs) ------------- */
 pptxBtn.addEventListener('click', async () => {
   pptxBtn.disabled = true;
@@ -593,18 +615,27 @@ pptxBtn.addEventListener('click', async () => {
     titleSlide.addText('Albert Daniel Gaviria Zapata - Cátedra IU Digital', { x:0.5, y:2.0, fontSize:14, color:'333333' });
 
     // content slides
-    events.forEach(ev => {
+    for (const ev of events) {
       let slide = pptx.addSlide();
       slide.addText(ev.title, { x:0.5, y:0.5, fontSize:28, bold:true, color:'3A7BD5' });
       slide.addText(ev.date, { x:0.5, y:1.2, fontSize:16, bold:true, color:'009FFF' });
-      slide.addImage({ url: ev.img, x:7.6, y:0.6, w:2.8, h:1.7 });
+      
+      try {
+        const base64Img = await imageUrlToBase64(ev.img);
+        slide.addImage({ data: base64Img, x:7.6, y:0.6, w:2.8, h:1.7 });
+      } catch (imgErr) {
+        console.error(`Failed to load image for ${ev.title}:`, imgErr);
+        // Optionally add a placeholder text if image fails
+        slide.addText('Error al cargar imagen', { x:7.6, y:0.6, w:2.8, h:1.7, color: 'FF0000' });
+      }
+
       slide.addText([
         { text: 'Descripción:', options: { bold:true } },
         { text: ev.description, options: { breakLine:true } },
         { text: 'Personajes:', options: { bold:true, breakLine:true } },
         { text: ev.persons, options: { breakLine:true } }
       ], { x:0.5, y:2.2, w:8.5, h:3.6, fontSize:12, bullet:true });
-    });
+    }
 
     await pptx.writeFile({ fileName: 'Linea_Tiempo_Humanismos.pptx' });
   } catch (err) {
